@@ -291,21 +291,15 @@ class CouchbaseUpgrader:
         while True:
             time.sleep(5)
 
-            command = "{} rebalance-status -c 127.0.0.1:{} -u {} -p '{}'" \
-                .format(self._cli, self._port, self._username, self._password)
+            rebalance_status = self.get_rebalance_status(node)
+            if rebalance_status == 'notRunning':
+                if self._verbose:
+                    print("Cluster is rebalanced")
+                else:
+                    sys.stdout.write(".\n")
+                    sys.stdout.flush()
 
-            result = self.ssh_command(node, command)
-            if result['exit_code'] == 0:
-                data = json.loads(result['stdout'])
-
-                if 'status' in data and data['status'] == 'notRunning':
-                    if self._verbose:
-                        print("Cluster is rebalanced")
-                    else:
-                        sys.stdout.write(".\n")
-                        sys.stdout.flush()
-
-                    return True
+                return True
 
             if self._verbose:
                 print("Cluster is not rebalanced yet")
@@ -362,6 +356,25 @@ class CouchbaseUpgrader:
             return data['status']
         else:
             return False
+
+    def get_rebalance_status(self, node):
+        """
+        Gets the rebalance status
+        :param node: string
+        :return: string|bool
+        """
+
+        command = "{} rebalance-status -c 127.0.0.1:{} -u {} -p '{}'" \
+            .format(self._cli, self._port, self._username, self._password)
+
+        result = self.ssh_command(node, command)
+        if result['exit_code'] == 0:
+            data = json.loads(result['stdout'])
+
+            if 'status' in data:
+                return data['status']
+
+        return False
 
     def get_latest_version(self, node):
         """
@@ -539,13 +552,16 @@ class CouchbaseUpgrader:
             sys.stderr.write("Did not start upgrading the cluster because not all nodes are healthy\n")
             return False
 
+        # Only start upgrading the cluster if rebalance is not running
+        print('Checking if rebalance is not running')
+        if self.get_rebalance_status(self._nodes[0]) != 'notRunning':
+            sys.stderr.write("Did not start upgrading the cluster because rebalance is running\n")
+            return False
+
         for node in self._nodes:
             if not self.upgrade_node(node):
                 sys.stderr.write("Failed to patch the Couchbase cluster\n")
                 return False
-
-            print('Testing phase: stop after one node')
-            exit(0)
 
         print ('Successfully upgraded all nodes of the Couchbase cluster')
 
