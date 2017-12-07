@@ -5,6 +5,8 @@ patched without downtime.
 
 Nodes that already have the correct version are skipped. So the script can be executed multiple times if desired. 
 
+Heavily tested with Couchbase version 5.0.0.
+
 # Usage
 
     usage: couchbase_upgrade.py [-h] -n NODES -u USERNAME -P PASSWORD [-p PORT]
