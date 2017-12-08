@@ -46,7 +46,7 @@ class CouchbaseUpgrader:
                  username=None,
                  password=None,
                  port=8091,
-                 cli='sudo /opt/couchbase/bin/couchbase-cli',
+                 cli='/opt/couchbase/bin/couchbase-cli',
                  service_stop_command='sudo systemctl stop couchbase-server',
                  service_start_command='sudo systemctl start couchbase-server',
                  upgrade_command='sudo yum clean all && sudo yum install -y couchbase-server-community',
@@ -614,8 +614,8 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', help='Couchbase HTTP port. Default 8091', type=int, default=8091)
     parser.add_argument('--cli',
                         help="Shell command to the Couchbase CLI. "
-                             "Default 'sudo /opt/couchbase/bin/couchbase-cli'",
-                        default='sudo /opt/couchbase/bin/couchbase-cli')
+                             "Default '/opt/couchbase/bin/couchbase-cli'",
+                        default='/opt/couchbase/bin/couchbase-cli')
     parser.add_argument('--service-stop-command',
                         help="Shell command to stop the Couchbase service on a node. "
                              "Default 'sudo systemctl stop couchbase-server'",
