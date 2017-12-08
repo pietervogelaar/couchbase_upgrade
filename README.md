@@ -32,8 +32,8 @@ Heavily tested with Couchbase version `4.5.1` and `5.0.0`.
       -P PASSWORD, --password PASSWORD
                             Password for authentication
       -p PORT, --port PORT  Couchbase HTTP port. Default 8091
-      --cli CLI             Shell command to the Couchbase CLI. Default 'sudo
-                            /opt/couchbase/bin/couchbase-cli'
+      --cli CLI             Shell command to the Couchbase CLI. Default
+                            '/opt/couchbase/bin/couchbase-cli'
       --service-stop-command SERVICE_STOP_COMMAND
                             Shell command to stop the Couchbase service on a node.
                             Default 'sudo systemctl stop couchbase-server'
