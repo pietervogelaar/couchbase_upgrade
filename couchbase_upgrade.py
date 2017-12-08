@@ -275,6 +275,8 @@ class CouchbaseUpgrader:
 
         if self.get_major_version() >= 5:
             command = '{} --no-wait'.format(command)
+        else:
+            command = 'nohup {} </dev/null &>/dev/null &'.format(command)
 
         result = self.ssh_command(node, command)
         if result['exit_code'] != 0:
@@ -542,7 +544,9 @@ class CouchbaseUpgrader:
         self.wait_until_node_healthy(node)
 
         print('- Setting recovery type to delta')
-        self.set_recovery_type(node, 'delta')
+        if not self.set_recovery_type(node, 'delta'):
+            sys.stderr.write("Failed to set node recovery type\n")
+            return False
 
         print('- Rebalancing the cluster')
         if not self.rebalance(node):
