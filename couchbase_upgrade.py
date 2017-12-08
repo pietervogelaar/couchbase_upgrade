@@ -446,7 +446,7 @@ class CouchbaseUpgrader:
         stdout_string = ''.join(stdout)
 
         # Remove clutter
-        hide_errors.append('.+?Connection .+? closed by remote host')
+        hide_errors.append('Connection .+? closed by remote host')
         filtered_stderr_lines = []
 
         for line in stderr:
