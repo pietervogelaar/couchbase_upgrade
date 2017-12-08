@@ -5,7 +5,7 @@ patched without downtime.
 
 Nodes that already have the correct version are skipped. So the script can be executed multiple times if desired. 
 
-Heavily tested with Couchbase version 4.5.1 and 5.0.0.
+Heavily tested with Couchbase version `4.5.1` and `5.0.0`.
 
 # Usage
 
