@@ -270,8 +270,11 @@ class CouchbaseUpgrader:
         :param node: string
         :return:
         """
-        command = "{} rebalance -c 127.0.0.1:{} -u {} -p '{}' --no-wait" \
+        command = "{} rebalance -c 127.0.0.1:{} -u {} -p '{}'" \
             .format(self._cli, self._port, self._username, self._password)
+
+        if self.get_major_version() >= 5:
+            command = '{} --no-wait'.format(command)
 
         result = self.ssh_command(node, command)
         if result['exit_code'] != 0:
@@ -345,8 +348,12 @@ class CouchbaseUpgrader:
                                                                         self._username,
                                                                         self._password)
 
-        regex = re.compile(r"Operation timed out", re.IGNORECASE)
-        result = self.ssh_command(node, command, [regex])
+        hide_errors = [
+            '.+?Operation timed out',
+            '.+?Connection refused',
+        ]
+
+        result = self.ssh_command(node, command, hide_errors)
         if result['exit_code'] != 0:
             return False
 
@@ -369,10 +376,17 @@ class CouchbaseUpgrader:
 
         result = self.ssh_command(node, command)
         if result['exit_code'] == 0:
-            data = json.loads(result['stdout'])
+            try:
+                data = json.loads(result['stdout'])
 
-            if 'status' in data:
-                return data['status']
+                if 'status' in data:
+                    # Couchbase 5
+                    return data['status']
+            except ValueError:
+                # Couchbase 4
+                matches = re.match("\(u'(.*)'", result['stdout'])
+                if matches:
+                    return matches.group(1)
 
         return False
 
@@ -392,6 +406,15 @@ class CouchbaseUpgrader:
             return latest_version
 
         return False
+
+    def get_major_version(self):
+        """
+        Gets the major version
+        :return: int
+        """
+        major_version = int(self._version.split('.')[0])
+
+        return major_version
 
     def reboot(self, node):
         """
@@ -421,14 +444,24 @@ class CouchbaseUpgrader:
         stderr = p.stderr.readlines()
 
         stdout_string = ''.join(stdout)
-        stderr_string = ''.join(stderr)
 
         # Remove clutter
-        regex = re.compile(r"Connection .+? closed by remote host\.\n?", re.IGNORECASE)
-        stderr_string = regex.sub('', stderr_string).strip()
+        hide_errors.append('.+?Connection .+? closed by remote host')
+        filtered_stderr_lines = []
 
-        for hide_error_regex in hide_errors:
-            stderr_string = hide_error_regex.sub('', stderr_string).strip()
+        for line in stderr:
+            matched = False
+
+            for hide_error in hide_errors:
+                matches = re.match(hide_error, line)
+                if matches:
+                    matched = True
+                    break
+
+            if not matched:
+                filtered_stderr_lines.append(line)
+
+        stderr_string = "\n".join(filtered_stderr_lines)
 
         if stderr_string:
             sys.stderr.write("SSH error from host {}: {}\n".format(host, stderr_string))
