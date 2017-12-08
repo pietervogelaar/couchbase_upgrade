@@ -64,9 +64,9 @@ Heavily tested with Couchbase version `4.5.1` and `5.0.0`.
                             occurred because the version was already the latest
       -v, --verbose         Display of more information
 
-Only the nodes parameter is required. This script works by default with a YUM installation
-of Couchbase. But with the command parameters it can be configured for other operating
-systems as well. It should also work with archive (tar) based installations.
+Only the nodes, username and password parameters are required. This script works by default with
+a YUM installation of Couchbase. But with the command parameters it can be configured for other
+operating systems as well. It should also work with archive (tar) based installations.
 
 **As root user**:
 
